@@ -1,0 +1,29 @@
+{
+  "_comment": "Self-maintained MCX CRUDEOIL reference. VERIFY every value against the current MCX contract spec / circulars and refresh yearly + on each roll.",
+  "symbol": "CRUDEOIL",
+  "lot_size_bbl": 100,
+  "tick_size_inr": 1.0,
+  "timezone": "Asia/Kolkata",
+  "session": {
+    "_comment": "MCX evening close shifts with US daylight saving: ~23:30 IST during US DST, ~23:55 IST otherwise.",
+    "open": "09:00",
+    "close_us_dst": "23:30",
+    "close_us_standard": "23:55"
+  },
+  "live_windows": [
+    {"name": "morning", "start": "09:15", "end": "11:30"},
+    {"name": "europe_open", "start": "13:30", "end": "16:00"},
+    {"name": "us_session", "start": "18:30", "end": "22:30"}
+  ],
+  "eod_flatten_minutes_before_close": 15,
+  "contracts": [
+    {
+      "_comment": "Fill from Dhan instrument master. security_id here overrides DHAN_CRUDEOIL_SECURITY_ID when today <= expiry.",
+      "expiry": "",
+      "security_id": ""
+    }
+  ],
+  "holidays": [
+    {"_comment": "Add full + partial MCX holidays from the yearly MCX circular, e.g. {\"date\": \"2026-10-02\", \"type\": \"full\", \"name\": \"...\"}"}
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "_comment": "Manually maintained high-impact events. Times are ISO-8601 with offset. The EIA Weekly Petroleum Status Report (Wed 10:30 America/New_York) is generated automatically - only add EIA entries here when the release is shifted by a US holiday. blackout_minutes overrides the default window for that event.",
+  "default_blackout_minutes": 30,
+  "events": [
+    {"_example": true, "name": "OPEC+ ministerial meeting", "time": "2026-12-01T15:30:00+05:30", "blackout_minutes": 120},
+    {"_example": true, "name": "FOMC rate decision", "time": "2026-12-09T00:30:00+05:30", "blackout_minutes": 60}
+  ]
+}

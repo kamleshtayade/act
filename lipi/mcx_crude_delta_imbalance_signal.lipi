@@ -1,0 +1,81 @@
+// =============================================================================
+// MCX Crude Oil - Delta Imbalance + CVD Confirmation Signal
+// GoCharting Lipi Script
+// =============================================================================
+//
+// VERIFIED against GoCharting's Lipi reference docs before writing this:
+//   indicator(), plot(), orderflow.delta, orderflow.cvd(), orderflow.maxdelta,
+//   orderflow.mindelta, alertcondition(), alert(), str.tostring(), color.*,
+//   plotStyle.*, if {} blocks, := reassignment.
+//
+// FLAGGED - NOT independently verified, check against the Lipi Language
+// Reference in the GoCharting editor before relying on these:
+//   - input() function signature/name for user-adjustable parameters
+//   - historical indexing syntax, e.g. cvd[N] for "N bars ago"
+//   - whether talib.* functions are needed for the lookback comparison
+// If either is unsupported, replace with the editor's auto-suggested
+// equivalent (hover-help in the Lipi Editor shows the live signature).
+//
+// IMPORTANT (per GoCharting docs): Lipi has no webhook function and no
+// order-placement surface. This script only raises an alert via alert() /
+// alertcondition(). The webhook URL itself is configured in the platform's
+// Alert Widget (right-click chart -> Alert), NOT in this script.
+// =============================================================================
+
+indicator("MCX Crude Oil - Delta Imbalance Signal", overlay=true)
+
+// --- Inputs (adjust in the Lipi Editor's input panel) ----------------------
+deltaThresholdInput = input(40000, title="Delta Imbalance Threshold")
+cvdLookbackInput    = input(20,    title="CVD Trend Lookback (bars)")
+
+// --- Orderflow reads ---------------------------------------------------------
+delta    = orderflow.delta
+cvd      = orderflow.cvd()
+maxDelta = orderflow.maxdelta
+minDelta = orderflow.mindelta
+
+// --- Simple CVD trend check (confirms direction, not just a single-bar spike)
+// NOTE: verify historical-index syntax cvd[N] in the editor; if unsupported,
+// use a persistent-variable running comparison instead, e.g.:
+//   cvdRef := cvdLookbackInput bars ago via a manually accumulated series
+cvdReference = cvd[cvdLookbackInput]
+cvdRising    = cvd > cvdReference
+
+// --- Signal conditions --------------------------------------------------------
+bullishImbalance = delta >= deltaThresholdInput
+bearishImbalance = delta <= -deltaThresholdInput
+
+longSignal  = bullishImbalance and cvdRising
+shortSignal = bearishImbalance and not cvdRising
+
+// --- Visuals (useful while you backtest the rule visually before trusting it)
+barColor = delta >= 0 ? color.teal : color.red
+plot(delta, title="Delta", style=plotStyle.bar, color=barColor)
+plot(cvd, title="Cumulative Volume Delta", style=plotStyle.line, color=color.orange)
+
+// --- Alert conditions: configurable from the Alert Widget UI -----------------
+alertcondition(longSignal, title="MCX Crude - Long Delta Imbalance",
+               message="LONG|delta_imbalance|crudeoil")
+alertcondition(shortSignal, title="MCX Crude - Short Delta Imbalance",
+               message="SHORT|delta_imbalance|crudeoil")
+
+// --- Inline alert with dynamic values, for payloads that need the actual
+// delta/CVD numbers rather than just a fixed message string ------------------
+if longSignal {
+    alert("LONG|delta=" + str.tostring(delta) + "|cvd=" + str.tostring(cvd))
+}
+if shortSignal {
+    alert("SHORT|delta=" + str.tostring(delta) + "|cvd=" + str.tostring(cvd))
+}
+
+// =============================================================================
+// Setup checklist once this is pasted into the Lipi Editor:
+//   1. Save and apply to your MCX Crude Oil chart.
+//   2. Right-click the chart -> Alert -> choose this script -> select the
+//      "Long Delta Imbalance" / "Short Delta Imbalance" condition.
+//   3. Set delivery method to Webhook; paste your FastAPI receiver's URL
+//      (the one your LangGraph ingest_node listens on).
+//   4. Backtest the rule visually across a few weeks of MCX Crude Oil bars
+//      BEFORE wiring the webhook live - confirm deltaThresholdInput is
+//      calibrated to this contract's actual volume, not a guess.
+// =============================================================================
